@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Administración de Pagos</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f1f2f6; margin: 0; padding: 20px; color: #2f3542; }
+        .container { max-width: 700px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        h1 { color: #2f3542; text-align: center; }
+        .puesto-card { border: 1px solid #dcdde1; padding: 15px; border-radius: 8px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; background: #fff; }
+        .btn-aprobar { background-color: #2ed573; color: white; border: none; padding: 8px 12px; border-radius: 5px; font-weight: bold; cursor: pointer; }
+        .btn-renovar { background-color: #1877f2; color: white; border: none; padding: 8px 12px; border-radius: 5px; font-weight: bold; cursor: pointer; }
+        .btn-baja { background-color: #ff4757; color: white; border: none; padding: 8px 12px; border-radius: 5px; font-weight: bold; cursor: pointer; }
+        .regresar { display: block; text-align: center; margin-top: 20px; color: #ff4757; text-decoration: none; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔒 Panel de Control de Pagos</h1>
+        <p style="text-align: center; color: #747d8c;">Aprueba nuevos registros o renueva los pagos semanales de los puestos</p>
+
+        <h3>Lista de puestos registrados:</h3>
+
+        {% for p in puestos %}
+            <div class="puesto-card">
+                <div>
+                    <h3 style="margin: 0 0 5px 0;">{{ p.nombre }}</h3>
+                    <p style="margin: 0; font-size: 14px; color: #747d8c;">{{ p.detalle }} | Tel: {{ p.telefono }}</p>
+                    <p style="margin: 5px 0 0 0; font-size: 13px;">
+                        <b>Estado:</b> <span style="color: {% if p.estado == 'Activo' %}#2ed573{% elif p.estado == 'Pendiente' %}#ffa502{% else %}#ff4757{% endif %};">{{ p.estado }}</span><br>
+                        <b>Vence / Vigencia:</b> {{ p.vence.strftime('%Y-%m-%d') }}
+                    </p>
+                </div>
+                
+                <div>
+                    <form method="POST" style="display: flex; gap: 5px;">
+                        <input type="hidden" name="puesto_id" value="{{ p.id }}">
+                        
+                        {% if p.estado != 'Activo' %}
+                            <button type="submit" name="accion" value="aprobar" class="btn-aprobar">Aprobar Pago</button>
+                        {% else %}
+                            <button type="submit" name="accion" value="renovar" class="btn-renovar">Renovar 7 días</button>
+                        {% endif %}
+
+                        {% if p.estado != 'De baja' %}
+                            <button type="submit" name="accion" value="baja" class="btn-baja">Bloquear (Baja)</button>
+                        {% endif %}
+                    </form>
+                </div>
+            </div>
+        {% endfor %}
+
+        <a href="/" class="regresar">← Volver al catálogo principal</a>
+    </div>
+</body>
+</html>
