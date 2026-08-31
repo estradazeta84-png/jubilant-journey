@@ -1,80 +1,70 @@
-from datetime import datetime, timedelta
-from flask import Flask, redirect, render_template, request, url_for
+from flask import Flask, render_template, request, redirect, url_for
+from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
 
-# Tu link de Mercado Pago configurado
-LINK_MERCADO_PAGO = "https://mpago.la/2sMGSE4"
+# Configuración de tu base de datos (ajusta si usas otra ruta)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db = SQLAlchemy(app)
 
-# Base de datos completamente limpia (sin puestos falsos)
-puestos_db = []
+# Modelo del Puesto
+class Puesto(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(100), nullable=False)
+    whatsapp = db.Column(db.String(20), nullable=False)
+    menu = db.Column(db.Text, nullable=False)
+    estado = db.Column(db.String(20), default='De baja')
 
+with app.app_context():
+    db.create_all()
 
-# 1. VISTA DE CLIENTES (Catálogo limpio y estatus automático por vencimiento de 7 días)
-@app.route("/")
+# Página principal (Catálogo para los clientes)
+@app.route('/')
 def index():
-    hoy = datetime.now()
-    # Si la semana de pago venció, pasa automáticamente el estado a 'De baja' (bloqueado)
-    for puesto in puestos_db:
-        if puesto["estado"] == "Activo" and puesto["vence"] < hoy:
-            puesto["estado"] = "De baja"
+    puestos = Puesto.query.all()
+    return render_template('index.html', puestos=puestos)
 
-    return render_template("index.html", puestos=puestos_db)
-
-
-# 2. VISTA DE REGISTRO PARA VENDEDORES (Paso 1: Pagar y enviar datos)
-@app.route("/vendedor", methods=["GET", "POST"])
+# Ruta de registro y salto a Mercado Pago
+@app.route('/vendedor', methods=['GET', 'POST'])
 def vendedor():
-    if request.method == "POST":
-        nombre = request.form.get("nombre")
-        detalle = request.form.get("detalle")
-        telefono = request.form.get("telefono")
+    if request.method == 'POST':
+        nombre = request.form.get('nombre')
+        whatsapp = request.form.get('whatsapp')
+        menu = request.form.get('menu')
+        
+        # 1. Guardamos los datos de inmediato en la base de datos
+        nuevo_puesto = Puesto(
+            nombre=nombre, 
+            whatsapp=whatsapp, 
+            menu=menu, 
+            estado='De baja'
+        )
+        db.session.add(nuevo_puesto)
+        db.session.commit()
+        
+        # 2. Redirigimos al enlace de suscripción de Mercado Pago
+        # (Reemplaza este enlace con tu link real de Mercado Pago)
+        return redirect('https://www.mercadopago.com.mx/subscriptions/checkout?your_subscription_link...')
+        
+    return render_template('vendedor.html')
 
-        # El nuevo puesto entra como "Pendiente" hasta que verifiques su pago en Mercado Pago
-        nuevo_puesto = {
-            "id": len(puestos_db) + 1,
-            "nombre": nombre,
-            "detalle": detalle,
-            "telefono": telefono,
-            "estado": "Pendiente",
-            "vence": datetime.now()
-            + timedelta(days=7),  # Se activará al aprobarse en el panel
-        }
-        puestos_db.append(nuevo_puesto)
-        return redirect(url_for("pago_exitoso", nombre=nombre))
-
-    return render_template("vendedor.html", link_mp=LINK_MERCADO_PAGO)
-
-
-# 3. PÁGINA INTERMEDIA DE INSTRUCCIÓN DE PAGO
-@app.route("/aviso-pago/<nombre>")
-def pago_exitoso(nombre):
-    return render_template(
-        "aviso_pago.html", nombre=nombre, link_mp=LINK_MERCADO_PAGO
-    )
-
-
-# 4. PANEL DE ADMINISTRADOR (Para ti: aprobar pagos, renovar 7 días o bloquear cuentas)
-@app.route("/admin", methods=["GET", "POST"])
+# Panel de administración oculto
+@app.route('/admin')
 def admin():
-    if request.method == "POST":
-        puesto_id = int(request.form.get("puesto_id"))
-        accion = request.form.get("accion")  # 'aprobar', 'renovar', o 'baja'
+    puestos = Puesto.query.all()
+    return render_template('admin.html', puestos=puestos)
 
-        for p in puestos_db:
-            if p["id"] == puesto_id:
-                if accion == "aprobar" or accion == "renovar":
-                    p["estado"] = "Activo"
-                    p["vence"] = (
-                        datetime.now() + timedelta(days=7)
-                    )  # Extiende 7 días más la vigencia
-                elif accion == "baja":
-                    p["estado"] = "De baja"
+# Ruta para cambiar el estado (Activo / De baja)
+@app.route('/admin/cambiar/<int:id>')
+def cambiar_estado(id):
+    puesto = Puesto.query.get_or_404(id)
+    if puesto.estado == 'Activo':
+        puesto.estado = 'De baja'
+    else:
+        puesto.estado = 'Activo'
+    db.session.commit()
+    return redirect(url_for('admin'))
 
-        return redirect(url_for("admin"))
-
-    return render_template("admin.html", puestos=puestos_db)
-
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     app.run(debug=True)
