@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Valle de los Olivos - Catálogo</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f1f2f6; margin: 0; padding: 20px; color: #2f3542; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        h1 { color: #ff4757; text-align: center; }
+        .puesto { border: 1px solid #e4e7eb; padding: 15px; border-radius: 8px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; background: #fff; }
+        .activo { border-left: 5px solid #2ed573; }
+        .baja { border-left: 5px solid #ff4757; background: #fff5f5; opacity: 0.7; }
+        .btn-pedir { background-color: #25d366; color: white; padding: 8px 14px; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 14px; }
+        .btn-baja { background-color: #ced6e0; color: #747d8c; padding: 8px 14px; border-radius: 5px; font-weight: bold; font-size: 14px; pointer-events: none; }
+        .link-registro { display: block; text-align: center; margin-top: 20px; color: #ff4757; font-weight: bold; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌮 Antojos - Valle de los Olivos</h1>
+        <p style="text-align: center; color: #747d8c;">Catálogo oficial del fin de semana</p>
+
+        <h3>Menús disponibles:</h3>
+        
+        {% for p in puestos %}
+            <div class="puesto {% if p.estado == 'Activo' %}activo{% else %}baja{% endif %}">
+                <div>
+                    <h3 style="margin: 0 0 5px 0;">{{ p.nombre }}</h3>
+                    <p style="margin: 0; font-size: 14px; color: #747d8c;">{{ p.detalle }}</p>
+                    {% if p.estado == 'De baja' %}
+                        <small style="color: #ff4757; font-weight: bold;">⚠️ Puesto de baja por falta de pago semanal</small>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    {% if p.estado == 'Activo' %}
+                        <a href="https://wa.me/52{{ p.telefono }}?text=Hola,%20quiero%20pedir%20de%20su%20menú." target="_blank" class="btn-pedir">Pedir</a>
+                    {% else %}
+                        <span class="btn-baja">No disponible</span>
+                    {% endif %}
+                </div>
+            </div>
+        {% endfor %}
+
+        <a href="/vendedor" class="link-registro">📢 ¿Eres vendedor? Registra tu puesto aquí</a>
+    </div>
+</body>
+</html>
