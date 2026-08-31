@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro en Revisión</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f1f2f6; margin: 0; padding: 20px; color: #2f3542; text-align: center; }
+        .container { max-width: 500px; margin: 40px auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        h2 { color: #ffa502; }
+        .btn { display: inline-block; background-color: #ff4757; color: white; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: bold; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>¡Registro Recibido, {{ nombre }}! ⏳</h2>
+        <p>Tu puesto se ha registrado correctamente, pero se encuentra en estado <b>Pendiente</b>.</p>
+        <p>En cuanto verifiquemos que tu pago se acreditó en nuestro Mercado Pago, tu cuenta será activada automáticamente en el catálogo.</p>
+        <a href="/" class="btn">Volver al catálogo</a>
+    </div>
+</body>
+</html>
