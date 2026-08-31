@@ -3,34 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registro de Vendedor</title>
+    <title>Registro de Vendedor - Valle de los Olivos</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f1f2f6; margin: 0; padding: 20px; color: #2f3542; }
-        .container { max-width: 500px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-        h2 { color: #ff4757; text-align: center; }
-        label { font-weight: bold; font-size: 14px; display: block; margin-top: 15px; }
-        input { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ced6e0; border-radius: 6px; box-sizing: border-box; }
-        button { background-color: #ff4757; color: white; border: none; padding: 12px; border-radius: 6px; width: 100%; font-weight: bold; font-size: 15px; margin-top: 20px; cursor: pointer; }
-        button:hover { background-color: #ff6b81; }
-        .regresar { display: block; text-align: center; margin-top: 15px; color: #747d8c; text-decoration: none; font-size: 14px; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        h1 { color: #ff4757; text-align: center; }
+        p { text-align: center; color: #747d8c; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; color: #2f3542; }
+        input[type="text"], textarea { width: 100%; padding: 10px; border: 1px solid #ced6e0; border-radius: 5px; box-sizing: border-box; }
+        .btn-pagar { background-color: #009ee3; color: white; padding: 12px 20px; text-decoration: none; border-radius: 5px; font-weight: bold; display: block; text-align: center; font-size: 16px; margin-top: 20px; }
+        .btn-pagar:hover { background-color: #0081bc; }
+        .volver { display: block; text-align: center; margin-top: 15px; color: #747d8c; text-decoration: none; }
     </style>
 </head>
 <body>
+
     <div class="container">
-        <h2>Registro de Menú</h2>
-        <form method="POST">
-            <label>Nombre de tu puesto:</label>
-            <input type="text" name="nombre" placeholder="Ej. Cocina Doña Mary" required>
+        <h1>🌮 Registro de Puesto</h1>
+        <p>Llena tus datos y realiza tu pago de $35 para activar tu espacio en el catálogo del fin de semana.</p>
 
-            <label>¿Qué vas a vender y cuántas porciones tienes?</label>
-            <input type="text" name="detalle" placeholder="Ej. Enchiladas • Quedan 12 órdenes" required>
+        <!-- Aquí puedes adaptar los campos según cómo guardes la información -->
+        <form>
+            <div class="form-group">
+                <label for="nombre">Nombre del Puesto:</label>
+                <input type="text" id="nombre" placeholder="Ej. Tacos Don Toño" required>
+            </div>
 
-            <label>Tu número de WhatsApp (10 dígitos):</label>
-            <input type="text" name="telefono" placeholder="Ej. 5512345678" required>
+            <div class="form-group">
+                <label for="telefono">Número de WhatsApp (con lada, ej. 521XXXXXXXXXX):</label>
+                <input type="text" id="telefono" placeholder="52..." required>
+            </div>
 
-            <button type="submit">Publicar mi menú</button>
+            <div class="form-group">
+                <label for="detalle">Menú / Platillo principal:</label>
+                <textarea id="detalle" rows="3" placeholder="Ej. Enchiladas, Tacos de bistec..." required></textarea>
+            </div>
+
+            <div style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #dfe4ea; margin-top: 20px;">
+                <p style="margin: 0 0 10px 0; font-weight: bold; color: #2f3542; text-align: left;">Cuota semanal: $35 MXN</p>
+                <p style="margin: 0 0 15px 0; font-size: 14px; text-align: left;">Para finalizar tu registro, realiza el pago en el siguiente enlace de Mercado Pago:</p>
+                
+                <!-- Tu enlace directo de Mercado Pago -->
+                <a href="https://mpago.la/2a5y92U" target="_blank" class="btn-pagar">
+                    Pagar $35 en Mercado Pago
+                </a>
+            </div>
         </form>
-        <a href="/" class="regresar">← Volver al catálogo</a>
+
+        <a href="/" class="volver">← Volver al catálogo principal</a>
     </div>
+
 </body>
 </html>
