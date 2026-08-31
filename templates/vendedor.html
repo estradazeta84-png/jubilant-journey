@@ -3,32 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registro de Vendedor</title>
+    <title>Registro de Nuevo Vendedor - Valle de los Olivos</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
-<body class="bg-light">
+<body>
     <div class="container mt-5">
         <div class="row justify-content-center">
-            <div class="col-md-6">
-                <div class="card shadow p-4">
-                    <h2 class="text-center mb-4">Registro de Puesto</h2>
+            <div class="col-md-7 col-lg-5">
+                <div class="card shadow-lg p-5">
+                    <h2 class="text-center mb-4 text-primary">¡Únete a Valle de los Olivos!</h2>
+                    <p class="text-muted text-center mb-4">Registra tu puesto y empieza a recibir pedidos este fin de semana.</p>
+                    
                     <form action="/vendedor" method="POST">
                         <div class="mb-3">
-                            <label for="nombre" class="form-label">Nombre del Puesto</label>
-                            <input type="text" class="form-control" id="nombre" name="nombre" required>
+                            <label for="nombre" class="form-label">Nombre de tu Puesto</label>
+                            <input type="text" class="form-control form-control-lg" id="nombre" name="nombre" required placeholder="Ej. Tacos El Güero">
                         </div>
                         
                         <div class="mb-3">
-                            <label for="whatsapp" class="form-label">Número de WhatsApp</label>
-                            <input type="text" class="form-control" id="whatsapp" name="whatsapp" required>
+                            <label for="whatsapp" class="form-label">Número de WhatsApp (10 dígitos)</label>
+                            <input type="text" class="form-control form-control-lg" id="whatsapp" name="whatsapp" required placeholder="Ej. 5512345678" maxlength="10">
                         </div>
                         
-                        <div class="mb-3">
-                            <label for="menu" class="form-label">Menú o Descripción de la comida</label>
-                            <textarea class="form-control" id="menu" name="menu" rows="3" required></textarea>
+                        <div class="mb-4">
+                            <label for="menu" class="form-label">Menú o Descripción de tus platillos</label>
+                            <textarea class="form-control" id="menu" name="menu" rows="4" required placeholder="Describe lo que vendes..."></textarea>
                         </div>
                         
-                        <button type="submit" class="btn btn-success w-100">Registrarse y Pagar Suscripción</button>
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg shadow">
+                                Registrarse y Pagar Suscripción ($35/sem)
+                            </button>
+                            <a href="/" class="btn btn-outline-secondary btn-sm mt-2">Volver al Catálogo</a>
+                        </div>
                     </form>
                 </div>
             </div>
