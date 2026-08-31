@@ -3,47 +3,87 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Valle de los Olivos - Catálogo</title>
-    <style>
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f1f2f6; margin: 0; padding: 20px; color: #2f3542; }
-        .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-        h1 { color: #ff4757; text-align: center; }
-        .puesto { border: 1px solid #e4e7eb; padding: 15px; border-radius: 8px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; background: #fff; }
-        .activo { border-left: 5px solid #2ed573; }
-        .baja { border-left: 5px solid #ff4757; background: #fff5f5; opacity: 0.7; }
-        .btn-pedir { background-color: #25d366; color: white; padding: 8px 14px; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 14px; }
-        .btn-baja { background-color: #ced6e0; color: #747d8c; padding: 8px 14px; border-radius: 5px; font-weight: bold; font-size: 14px; pointer-events: none; }
-        .link-registro { display: block; text-align: center; margin-top: 20px; color: #ff4757; font-weight: bold; text-decoration: none; }
-    </style>
+    <title>Valle de los Olivos - Puestos Disponibles</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <div class="container">
-        <h1>🌮 Antojos - Valle de los Olivos</h1>
-        <p style="text-align: center; color: #747d8c;">Catálogo oficial del fin de semana</p>
+    <div class="container py-5">
+        <div class="text-center mb-5">
+            <h1>🍴 Valle de los Olivos 🍴</h1>
+            <p class="lead text-muted">Descubre los puestos disponibles este fin de semana</p>
+        </div>
 
-        <h3>Menús disponibles:</h3>
-        
-        {% for p in puestos %}
-            <div class="puesto {% if p.estado == 'Activo' %}activo{% else %}baja{% endif %}">
-                <div>
-                    <h3 style="margin: 0 0 5px 0;">{{ p.nombre }}</h3>
-                    <p style="margin: 0; font-size: 14px; color: #747d8c;">{{ p.detalle }}</p>
-                    {% if p.estado == 'De baja' %}
-                        <small style="color: #ff4757; font-weight: bold;">⚠️ Puesto de baja por falta de pago semanal</small>
+        <!-- Tarjetas de Puestos Activos -->
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+            {% for puesto in puestos %}
+                {% if puesto.estado == 'Activo' %}
+                    <div class="col">
+                        <div class="card h-100 shadow-sm">
+                            <div class="card-header text-center">
+                                <h5>{{ puesto.nombre }}</h5>
+                            </div>
+                            <div class="card-body">
+                                <!-- Calificación con Estrellas -->
+                                <div class="text-warning mb-2 text-center">
+                                    {% set promedio = (puesto.puntuacion_total / puesto.total_votos) | round(1) if puesto.total_votos > 0 else 5.0 %}
+                                    <span style="font-size: 0.9rem;">⭐ {{ promedio }} / 5.0 ({{ puesto.total_votos }} opiniones)</span>
+                                </div>
+
+                                <h6 class="card-subtitle mb-2 text-muted">Menú:</h6>
+                                <p class="card-text">{{ puesto.menu }}</p>
+
+                                <!-- Formulario rápido para calificar -->
+                                <form action="/calificar/{{ puesto.id }}" method="POST" class="mt-3 text-center bg-light p-2 rounded">
+                                    <small class="text-muted d-block mb-1">Califica este puesto:</small>
+                                    <select name="estrellas" class="form-select form-select-sm d-inline-block w-auto mb-1" required>
+                                        <option value="5">⭐⭐⭐⭐⭐ Excelente</option>
+                                        <option value="4">⭐⭐⭐⭐ Muy bueno</option>
+                                        <option value="3">⭐⭐⭐ Bueno</option>
+                                        <option value="2">⭐⭐ Regular</option>
+                                        <option value="1">⭐ Malo</option>
+                                    </select>
+                                    <button type="submit" class="btn btn-outline-warning btn-sm py-0">Votar</button>
+                                </form>
+                            </div>
+                            <div class="card-footer bg-transparent border-top-0 text-center pb-3">
+                                <a href="https://wa.me/52{{ puesto.whatsapp }}?text=Hola, vengo de Valle de los Olivos. Me interesa este pedido:..." 
+                                   target="_blank" 
+                                   class="btn btn-success w-100">
+                                   Pedir por WhatsApp
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+
+        <!-- Sección de Puestos en Pausa -->
+        <div class="mt-5 p-4 bg-white rounded shadow-sm">
+            <h4 class="text-danger text-center mb-4">Puestos en Pausa (Por el momento)</h4>
+            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-3">
+                {% for puesto in puestos %}
+                    {% if puesto.estado != 'Activo' %}
+                        <div class="col">
+                            <div class="card border-danger text-danger h-100 opacity-75">
+                                <div class="card-body text-center">
+                                    <h6 class="card-title">{{ puesto.nombre }}</h6>
+                                    <small class="text-danger">Servicio no disponible</small>
+                                </div>
+                            </div>
+                        </div>
                     {% endif %}
-                </div>
-                
-                <div>
-                    {% if p.estado == 'Activo' %}
-                        <a href="https://wa.me/52{{ p.telefono }}?text=Hola,%20quiero%20pedir%20de%20su%20menú." target="_blank" class="btn-pedir">Pedir</a>
-                    {% else %}
-                        <span class="btn-baja">No disponible</span>
-                    {% endif %}
-                </div>
+                {% endfor %}
             </div>
-        {% endfor %}
+        </div>
 
-        <a href="/vendedor" class="link-registro">📢 ¿Eres vendedor? Registra tu puesto aquí</a>
+        <!-- Botón flotante para registro de nuevos vendedores -->
+        <div class="fixed-bottom p-3 text-end">
+            <a href="/vendedor" class="btn btn-primary btn-lg rounded-pill shadow">
+                ¿Quieres poner tu puesto? ¡Regístrate aquí!
+            </a>
+        </div>
     </div>
 </body>
 </html>
