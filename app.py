@@ -22,7 +22,7 @@ class Puesto(db.Model):
     puntuacion_total = db.Column(db.Integer, default=0)
     total_votos = db.Column(db.Integer, default=0)
 
-# Crear la base de datos automáticamente al iniciar
+# Crear la base de datos automáticamente al iniciar si no existe
 with app.app_context():
     db.create_all()
 
@@ -36,16 +36,17 @@ def index():
 @app.route('/vendedor', methods=['GET', 'POST'])
 def vendedor():
     if request.method == 'POST':
-        nombre = request.form['nombre']
-        whatsapp = request.form['whatsapp']
-        menu = request.form['menu']
+        nombre = request.form.get('nombre')
+        whatsapp = request.form.get('whatsapp')
+        menu = request.form.get('menu')
         
-        # Se registra como 'Pendiente' hasta que efectúe el pago
-        nuevo_puesto = Puesto(nombre=nombre, whatsapp=whatsapp, menu=menu, estado='Pendiente')
-        db.session.add(nuevo_puesto)
-        db.session.commit()
+        if nombre and whatsapp and menu:
+            # Se registra como 'Pendiente' y se fuerza el guardado con commit
+            nuevo_puesto = Puesto(nombre=nombre, whatsapp=whatsapp, menu=menu, estado='Pendiente')
+            db.session.add(nuevo_puesto)
+            db.session.commit()
         
-        # Redirección directa al link de Mercado Pago configurado
+        # Redirección al link de Mercado Pago
         return redirect('https://mpago.la/2a5y92U')
         
     return render_template('vendedor.html')
@@ -54,7 +55,7 @@ def vendedor():
 @app.route('/calificar/<int:id>', methods=['POST'])
 def calificar(id):
     puesto = Puesto.query.get_or_404(id)
-    estrellas = int(request.form['estrellas'])
+    estrellas = int(request.form.get('estrellas', 5))
     
     puesto.puntuacion_total += estrellas
     puesto.total_votos += 1
@@ -67,7 +68,7 @@ def calificar(id):
 def admin_login():
     error = None
     if request.method == 'POST':
-        password = request.form['password']
+        password = request.form.get('password')
         if password == 'Evelin22':
             session['admin'] = True
             return redirect(url_for('admin_panel'))
