@@ -5,7 +5,7 @@ import os
 app = Flask(__name__)
 app.secret_key = 'clave_secreta_valle_olivos'
 
-# Configuración inteligente para conectar con Supabase (Puerto 6543 Pooler)
+# Conexión inteligente a Supabase (Pooler Puerto 6543)
 database_url = os.environ.get('DATABASE_URL')
 if database_url and database_url.startswith("postgres://"):
     database_url = database_url.replace("postgres://", "postgresql://", 1)
@@ -15,10 +15,9 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 
-# Tu enlace oficial de Mercado Pago
-LINK_MERCADO_PAGO = "https://link.mercadopago.com.mx/valledelosolivos"  # (O pon tu link exacto aquí si cambia)
+# Tu enlace oficial de suscripción de Mercado Pago
+LINK_MERCADO_PAGO = "https://www.mercadopago.com.mx/subscriptions/checkout?preapproval_plan_id=79fd4dccfd394703b326586a6463c923"
 
-# Modelo de Puestos actualizado con soporte completo para PostgreSQL
 class Puesto(db.Model):
     __tablename__ = 'puesto'
     id = db.Column(db.Integer, primary_key=True)
@@ -32,7 +31,6 @@ class Puesto(db.Model):
 with app.app_context():
     db.create_all()
 
-# 1. Página Principal
 @app.route('/')
 def index():
     try:
@@ -41,11 +39,11 @@ def index():
         puestos_activos = []
     return render_template('index.html', puestos=puestos_activos)
 
-# 2. Página de Vendedor: Guarda el registro y redirige directo a Mercado Pago
 @app.route('/vendedor', methods=['GET', 'POST'])
 def vendedor():
     if request.method == 'POST':
         try:
+            # 1. Se registra en la base de datos de inmediato al presionar el botón
             nuevo_puesto = Puesto(
                 nombre=request.form['nombre'],
                 whatsapp=request.form['whatsapp'],
@@ -54,15 +52,15 @@ def vendedor():
             )
             db.session.add(nuevo_puesto)
             db.session.commit()
-            # Redirige al usuario al enlace de pago de Mercado Pago
-            return redirect(LINK_MERCADO_PAGO)
+            
+            # 2. Se muestra la pantalla de éxito que los redirige a tu link de suscripción sin bucles
+            return render_template('pago_exitoso.html', link_pago=LINK_MERCADO_PAGO)
         except Exception as e:
             db.session.rollback()
-            return f"Hubo un error al registrar: {e}", 500
+            return f"Error al registrar: {e}", 500
             
     return render_template('vendedor.html')
 
-# 3. Panel de Administración (Soporta plantilla admin.html)
 @app.route('/admin', methods=['GET', 'POST'])
 def admin():
     if session.get('admin_logged_in'):
@@ -73,8 +71,7 @@ def admin():
         return render_template('admin.html', puestos=puestos)
     
     if request.method == 'POST':
-        password = request.form.get('password')
-        if password == 'admin123':  # Puedes cambiar tu contraseña de admin aquí
+        if request.form.get('password') == 'admin123':
             session['admin_logged_in'] = True
             return redirect(url_for('admin'))
         else:
@@ -82,12 +79,10 @@ def admin():
             
     return render_template('Admin_login.html')
 
-# Ruta por si entran con minúsculas
 @app.route('/admin_login', methods=['GET', 'POST'])
 def admin_login():
     return redirect(url_for('admin'))
 
-# Aprobar Puesto desde Admin
 @app.route('/admin/aprobar/<int:id>')
 def aprobar_puesto(id):
     if session.get('admin_logged_in'):
@@ -96,7 +91,6 @@ def aprobar_puesto(id):
         db.session.commit()
     return redirect(url_for('admin'))
 
-# Eliminar Puesto desde Admin
 @app.route('/admin/eliminar/<int:id>')
 def eliminar_puesto(id):
     if session.get('admin_logged_in'):
