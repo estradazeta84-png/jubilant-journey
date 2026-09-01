@@ -29,15 +29,15 @@ class Puesto(db.Model):
 with app.app_context():
     db.create_all()
 
-# Ruta Principal
+# 1. Página Principal
 @app.route('/')
 def index():
     puestos_activos = Puesto.query.filter_by(estado='Aprobado').all()
     return render_template('index.html', puestos=puestos_activos)
 
-# Ruta para registro de nuevos puestos
-@app.route('/registrar', methods=['GET', 'POST'])
-def registrar():
+# 2. Página de Vendedor (Registro de nuevos puestos)
+@app.route('/vendedor', methods=['GET', 'POST'])
+def vendedor():
     if request.method == 'POST':
         nuevo_puesto = Puesto(
             nombre=request.form['nombre'],
@@ -48,9 +48,9 @@ def registrar():
         db.session.add(nuevo_puesto)
         db.session.commit()
         return redirect(url_for('index'))
-    return render_template('registrar.html')
+    return render_template('vendedor.html')
 
-# Panel de Administración (Contraseña: admin123)
+# 3. Panel de Administración y Login de Admin (Usando tus plantillas exactas)
 @app.route('/admin', methods=['GET', 'POST'])
 def admin():
     if session.get('admin_logged_in'):
@@ -58,11 +58,12 @@ def admin():
         return render_template('admin.html', puestos=puestos)
     
     if request.method == 'POST':
-        if request.form.get('password') == 'admin123':
+        if request.form.get('password') == 'admin123':  # Cambia esta contraseña si gustas
             session['admin_logged_in'] = True
             return redirect(url_for('admin'))
-    return render_template('login_admin.html')
+    return render_template('Admin_login.html')
 
+# Acciones de Admin: Aprobar puesto
 @app.route('/admin/aprobar/<int:id>')
 def aprobar_puesto(id):
     if session.get('admin_logged_in'):
@@ -71,6 +72,7 @@ def aprobar_puesto(id):
         db.session.commit()
     return redirect(url_for('admin'))
 
+# Acciones de Admin: Eliminar puesto
 @app.route('/admin/eliminar/<int:id>')
 def eliminar_puesto(id):
     if session.get('admin_logged_in'):
