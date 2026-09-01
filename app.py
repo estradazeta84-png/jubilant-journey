@@ -35,12 +35,58 @@ with app.app_context():
 
 @app.route('/')
 def index():
-    puestos_activos = []
+    puestos = []
     try:
-        puestos_activos = Puesto.query.filter_by(estado='Aprobado').all()
+        # Traemos todos los puestos para filtrar de forma segura en Python
+        todos = Puesto.query.all()
+        puestos = [p for p in todos if p.estado and p.estado.strip().lower() == 'aprobado']
     except Exception:
-        pass
-    return render_template('index.html', puestos=puestos_activos)
+        puestos = []
+
+    # Generamos tarjetas elegantes para la página principal con el botón de WhatsApp
+    html_tarjetas = ""
+    for p in puestos:
+        # Limpiamos el número de WhatsApp para el enlace directo (solo números)
+        tel_limpio = "".join(filter(str.isdigit, p.whatsapp))
+        mensaje_wa = f"Hola, me interesa información sobre su menú: {p.menu}"
+        link_whatsapp = f"https://wa.me/52{tel_limpio}?text={mensaje_wa}" if len(tel_limpio) >= 10 else f"https://wa.me/{tel_limpio}"
+
+        html_tarjetas += f"""
+        <div style="background: white; border-radius: 8px; padding: 20px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); border-left: 5px solid #28a745;">
+            <h3 style="margin: 0 0 10px 0; color: #333;">{p.nombre}</h3>
+            <p style="margin: 5px 0; color: #666;"><strong>Menú / Detalles:</strong> {p.menu}</p>
+            <div style="margin-top: 15px;">
+                <a href="{link_whatsapp}" target="_blank" style="background: #25d366; color: white; padding: 10px 15px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">
+                    Pedir por WhatsApp 📱
+                </a>
+            </div>
+        </div>
+        """
+
+    return f"""
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <title>Valle de los Olivos - Directorio</title>
+    </head>
+    <body style="font-family: Arial, sans-serif; background: #f4f7f6; margin: 0; padding: 20px;">
+        <div style="max-width: 800px; margin: auto;">
+            <div style="text-align: center; margin-bottom: 30px;">
+                <h1 style="color: #333;">🍽️ Valle de los Olivos</h1>
+                <p style="color: #666;">Descubre los puestos de comida disponibles y haz tu pedido directamente.</p>
+                <a href="/vendedor" style="background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block; margin-top: 10px;">Registrar mi Puesto 🚀</a>
+                <a href="/admin" style="display: block; margin-top: 15px; color: #888; font-size: 14px; text-decoration: none;">Panel de Administración</a>
+            </div>
+            
+            <h2 style="color: #444; border-bottom: 2px solid #ddd; padding-bottom: 5px;">Puestos Disponibles</h2>
+            <div style="margin-top: 20px;">
+                {html_tarjetas if html_tarjetas else '<p style="text-align: center; color: #777; background: white; padding: 30px; border-radius: 8px;">No hay puestos aprobados en este momento. Vuelve pronto o registra el tuyo.</p>'}
+            </div>
+        </div>
+    </body>
+    </html>
+    """
 
 @app.route('/vendedor', methods=['GET', 'POST'])
 def vendedor():
@@ -68,7 +114,6 @@ def vendedor():
 @app.route('/admin', methods=['GET', 'POST'])
 def admin():
     if request.method == 'POST':
-        # Contraseña actualizada a Evelin22
         if request.form.get('password') == 'Evelin22':
             session['admin_logged_in'] = True
             return redirect(url_for('admin'))
@@ -89,13 +134,14 @@ def admin():
             
         html_puestos = ""
         for p in puestos:
+            estado_color = 'green' if p.estado and p.estado.strip().lower() == 'aprobado' else 'orange'
             html_puestos += f"""
             <tr>
                 <td style="padding: 10px; border: 1px solid #ddd;">{p.id}</td>
                 <td style="padding: 10px; border: 1px solid #ddd;">{p.nombre}</td>
                 <td style="padding: 10px; border: 1px solid #ddd;">{p.whatsapp}</td>
                 <td style="padding: 10px; border: 1px solid #ddd;">{p.menu}</td>
-                <td style="padding: 10px; border: 1px solid #ddd; font-weight: bold; color: {'green' if p.estado == 'Aprobado' else 'orange'};">{p.estado}</td>
+                <td style="padding: 10px; border: 1px solid #ddd; font-weight: bold; color: {estado_color};">{p.estado}</td>
                 <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">
                     <a href="/admin/aprobar/{p.id}" style="background: #28a745; color: white; padding: 5px 10px; text-decoration: none; border-radius: 4px; margin-right: 5px;">Aprobar</a>
                     <a href="/admin/eliminar/{p.id}" style="background: #dc3545; color: white; padding: 5px 10px; text-decoration: none; border-radius: 4px;" onclick="return confirm('¿Seguro que deseas eliminarlo?');">Eliminar</a>
