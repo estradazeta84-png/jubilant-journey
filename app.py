@@ -43,7 +43,7 @@ def index():
 def vendedor():
     if request.method == 'POST':
         try:
-            # 1. Se registra en la base de datos de inmediato al presionar el botón
+            # 1. Se guarda en Supabase al instante de hacer clic
             nuevo_puesto = Puesto(
                 nombre=request.form['nombre'],
                 whatsapp=request.form['whatsapp'],
@@ -53,8 +53,8 @@ def vendedor():
             db.session.add(nuevo_puesto)
             db.session.commit()
             
-            # 2. Se muestra la pantalla de éxito que los redirige a tu link de suscripción sin bucles
-            return render_template('pago_exitoso.html', link_pago=LINK_MERCADO_PAGO)
+            # 2. Redirige directo al link de suscripción de Mercado Pago
+            return redirect(LINK_MERCADO_PAGO)
         except Exception as e:
             db.session.rollback()
             return f"Error al registrar: {e}", 500
