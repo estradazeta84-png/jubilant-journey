@@ -48,7 +48,6 @@ def index():
         mensaje_wa = f"Hola, me interesa información sobre su menú: {p.menu}"
         link_whatsapp = f"https://wa.me/52{tel_limpio}?text={mensaje_wa}" if len(tel_limpio) >= 10 else f"https://wa.me/{tel_limpio}"
 
-        # Cálculo del promedio de estrellas
         promedio = 0.0
         if p.total_votos and p.total_votos > 0:
             promedio = round(p.puntuacion_total / p.total_votos, 1)
@@ -58,7 +57,6 @@ def index():
             <h3 style="margin: 0 0 10px 0; color: #333;">{p.nombre}</h3>
             <p style="margin: 5px 0; color: #666;"><strong>Menú / Detalles:</strong> {p.menu}</p>
             
-            <!-- Sección de Estrellas y Puntuación -->
             <div style="background: #fdf8e2; padding: 10px; border-radius: 5px; margin: 15px 0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
                 <div>
                     <span style="font-size: 18px; font-weight: bold; color: #f39c12;">⭐ {promedio} / 5.0</span>
@@ -97,7 +95,6 @@ def index():
                 <h1 style="color: #333;">🍽️ Valle de los Olivos</h1>
                 <p style="color: #666;">Descubre los mejores puestos de comida calificados por la comunidad.</p>
                 <a href="/vendedor" style="background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block; margin-top: 10px;">Registrar mi Puesto 🚀</a>
-                <a href="/admin" style="display: block; margin-top: 15px; color: #888; font-size: 14px; text-decoration: none;">Panel de Administración</a>
             </div>
             
             <h2 style="color: #444; border-bottom: 2px solid #ddd; padding-bottom: 5px;">Puestos Disponibles</h2>
