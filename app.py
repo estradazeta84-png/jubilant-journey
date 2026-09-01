@@ -25,7 +25,7 @@ with app.app_context():
     db.create_all()
 
 # Contraseña de administrador
-ADMIN_PASSWORD = "12345"
+ADMIN_PASSWORD = "Evelin22"
 
 # Página principal (Catálogo para los clientes con estrellas y WhatsApp)
 @app.route('/')
