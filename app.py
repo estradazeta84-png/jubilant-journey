@@ -5,7 +5,7 @@ import os
 app = Flask(__name__)
 app.secret_key = 'clave_secreta_valle_olivos'
 
-# Configuración inteligente para conectar con Supabase desde Render
+# Configuración inteligente para conectar con Supabase (Puerto 6543 Pooler)
 database_url = os.environ.get('DATABASE_URL')
 if database_url and database_url.startswith("postgres://"):
     database_url = database_url.replace("postgres://", "postgresql://", 1)
@@ -15,7 +15,10 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 
-# Modelo de Puestos para el Directorio Valle de los Olivos
+# Tu enlace oficial de Mercado Pago
+LINK_MERCADO_PAGO = "https://link.mercadopago.com.mx/valledelosolivos"  # (O pon tu link exacto aquí si cambia)
+
+# Modelo de Puestos actualizado con soporte completo para PostgreSQL
 class Puesto(db.Model):
     __tablename__ = 'puesto'
     id = db.Column(db.Integer, primary_key=True)
@@ -32,38 +35,59 @@ with app.app_context():
 # 1. Página Principal
 @app.route('/')
 def index():
-    puestos_activos = Puesto.query.filter_by(estado='Aprobado').all()
+    try:
+        puestos_activos = Puesto.query.filter_by(estado='Aprobado').all()
+    except Exception:
+        puestos_activos = []
     return render_template('index.html', puestos=puestos_activos)
 
-# 2. Página de Vendedor (Registro de nuevos puestos)
+# 2. Página de Vendedor: Guarda el registro y redirige directo a Mercado Pago
 @app.route('/vendedor', methods=['GET', 'POST'])
 def vendedor():
     if request.method == 'POST':
-        nuevo_puesto = Puesto(
-            nombre=request.form['nombre'],
-            whatsapp=request.form['whatsapp'],
-            menu=request.form['menu'],
-            estado='Pendiente'
-        )
-        db.session.add(nuevo_puesto)
-        db.session.commit()
-        return redirect(url_for('index'))
+        try:
+            nuevo_puesto = Puesto(
+                nombre=request.form['nombre'],
+                whatsapp=request.form['whatsapp'],
+                menu=request.form['menu'],
+                estado='Pendiente'
+            )
+            db.session.add(nuevo_puesto)
+            db.session.commit()
+            # Redirige al usuario al enlace de pago de Mercado Pago
+            return redirect(LINK_MERCADO_PAGO)
+        except Exception as e:
+            db.session.rollback()
+            return f"Hubo un error al registrar: {e}", 500
+            
     return render_template('vendedor.html')
 
-# 3. Panel de Administración y Login de Admin (Usando tus plantillas exactas)
+# 3. Panel de Administración (Soporta plantilla admin.html)
 @app.route('/admin', methods=['GET', 'POST'])
 def admin():
     if session.get('admin_logged_in'):
-        puestos = Puesto.query.all()
+        try:
+            puestos = Puesto.query.all()
+        except Exception:
+            puestos = []
         return render_template('admin.html', puestos=puestos)
     
     if request.method == 'POST':
-        if request.form.get('password') == 'admin123':  # Cambia esta contraseña si gustas
+        password = request.form.get('password')
+        if password == 'admin123':  # Puedes cambiar tu contraseña de admin aquí
             session['admin_logged_in'] = True
             return redirect(url_for('admin'))
+        else:
+            return render_template('Admin_login.html', error="Contraseña incorrecta")
+            
     return render_template('Admin_login.html')
 
-# Acciones de Admin: Aprobar puesto
+# Ruta por si entran con minúsculas
+@app.route('/admin_login', methods=['GET', 'POST'])
+def admin_login():
+    return redirect(url_for('admin'))
+
+# Aprobar Puesto desde Admin
 @app.route('/admin/aprobar/<int:id>')
 def aprobar_puesto(id):
     if session.get('admin_logged_in'):
@@ -72,7 +96,7 @@ def aprobar_puesto(id):
         db.session.commit()
     return redirect(url_for('admin'))
 
-# Acciones de Admin: Eliminar puesto
+# Eliminar Puesto desde Admin
 @app.route('/admin/eliminar/<int:id>')
 def eliminar_puesto(id):
     if session.get('admin_logged_in'):
