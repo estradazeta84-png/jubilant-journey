@@ -18,7 +18,7 @@ class Puesto(db.Model):
     nombre = db.Column(db.String(100), nullable=False)
     whatsapp = db.Column(db.String(20), nullable=False)
     menu = db.Column(db.Text, nullable=False)
-    estado = db.Column(db.String(20), default='Activo') # Activo o Pausa
+    estado = db.Column(db.String(20), default='Pendiente') # Pendiente, Activo o Pausa
     puntuacion_total = db.Column(db.Integer, default=0)
     total_votos = db.Column(db.Integer, default=0)
 
@@ -32,7 +32,7 @@ def index():
     puestos = Puesto.query.all()
     return render_template('index.html', puestos=puestos)
 
-# Ruta para Registro de Nuevos Vendedores
+# Ruta para Registro de Nuevos Vendedores (Redirige a Mercado Pago)
 @app.route('/vendedor', methods=['GET', 'POST'])
 def vendedor():
     if request.method == 'POST':
@@ -40,10 +40,14 @@ def vendedor():
         whatsapp = request.form['whatsapp']
         menu = request.form['menu']
         
-        nuevo_puesto = Puesto(nombre=nombre, whatsapp=whatsapp, menu=menu, estado='Activo')
+        # Se registra como 'Pendiente' hasta que efectúe el pago
+        nuevo_puesto = Puesto(nombre=nombre, whatsapp=whatsapp, menu=menu, estado='Pendiente')
         db.session.add(nuevo_puesto)
         db.session.commit()
-        return redirect(url_for('index'))
+        
+        # Redirección directa al link de Mercado Pago configurado
+        return redirect('https://mpago.la/2a5y92U')
+        
     return render_template('vendedor.html')
 
 # Ruta para Calificar un Puesto con Estrellas
@@ -64,7 +68,7 @@ def admin_login():
     error = None
     if request.method == 'POST':
         password = request.form['password']
-        if password == 'evelin22': # Contraseña del panel
+        if password == 'Evelin22':
             session['admin'] = True
             return redirect(url_for('admin_panel'))
         else:
@@ -79,7 +83,7 @@ def admin_panel():
     puestos = Puesto.query.all()
     return render_template('admin.html', puestos=puestos)
 
-# Cambiar Estado de Puesto (Activo / Baja)
+# Cambiar Estado de Puesto (Activar / Pausar)
 @app.route('/admin/cambiar/<int:id>')
 def cambiar_estado(id):
     if not session.get('admin'):
