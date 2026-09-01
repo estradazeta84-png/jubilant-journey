@@ -37,25 +37,46 @@ with app.app_context():
 def index():
     puestos = []
     try:
-        # Traemos todos los puestos para filtrar de forma segura en Python
         todos = Puesto.query.all()
         puestos = [p for p in todos if p.estado and p.estado.strip().lower() == 'aprobado']
     except Exception:
         puestos = []
 
-    # Generamos tarjetas elegantes para la página principal con el botón de WhatsApp
     html_tarjetas = ""
     for p in puestos:
-        # Limpiamos el número de WhatsApp para el enlace directo (solo números)
         tel_limpio = "".join(filter(str.isdigit, p.whatsapp))
         mensaje_wa = f"Hola, me interesa información sobre su menú: {p.menu}"
         link_whatsapp = f"https://wa.me/52{tel_limpio}?text={mensaje_wa}" if len(tel_limpio) >= 10 else f"https://wa.me/{tel_limpio}"
 
+        # Cálculo del promedio de estrellas
+        promedio = 0.0
+        if p.total_votos and p.total_votos > 0:
+            promedio = round(p.puntuacion_total / p.total_votos, 1)
+
         html_tarjetas += f"""
-        <div style="background: white; border-radius: 8px; padding: 20px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); border-left: 5px solid #28a745;">
+        <div style="background: white; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); border-left: 5px solid #28a745;">
             <h3 style="margin: 0 0 10px 0; color: #333;">{p.nombre}</h3>
             <p style="margin: 5px 0; color: #666;"><strong>Menú / Detalles:</strong> {p.menu}</p>
-            <div style="margin-top: 15px;">
+            
+            <!-- Sección de Estrellas y Puntuación -->
+            <div style="background: #fdf8e2; padding: 10px; border-radius: 5px; margin: 15px 0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+                <div>
+                    <span style="font-size: 18px; font-weight: bold; color: #f39c12;">⭐ {promedio} / 5.0</span>
+                    <span style="color: #666; font-size: 13px; margin-left: 5px;">({p.total_votos} votos)</span>
+                </div>
+                <form action="/votar/{p.id}" method="POST" style="display: flex; gap: 5px; align-items: center; margin-top: 5px;">
+                    <select name="estrellas" style="padding: 5px; border-radius: 4px; border: 1px solid #ccc;">
+                        <option value="5">⭐⭐⭐⭐⭐ (5)</option>
+                        <option value="4">⭐⭐⭐⭐ (4)</option>
+                        <option value="3">⭐⭐⭐ (3)</option>
+                        <option value="2">⭐⭐ (2)</option>
+                        <option value="1">⭐ (1)</option>
+                    </select>
+                    <button type="submit" style="background: #f39c12; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-weight: bold; cursor: pointer;">Calificar</button>
+                </form>
+            </div>
+
+            <div>
                 <a href="{link_whatsapp}" target="_blank" style="background: #25d366; color: white; padding: 10px 15px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">
                     Pedir por WhatsApp 📱
                 </a>
@@ -74,7 +95,7 @@ def index():
         <div style="max-width: 800px; margin: auto;">
             <div style="text-align: center; margin-bottom: 30px;">
                 <h1 style="color: #333;">🍽️ Valle de los Olivos</h1>
-                <p style="color: #666;">Descubre los puestos de comida disponibles y haz tu pedido directamente.</p>
+                <p style="color: #666;">Descubre los mejores puestos de comida calificados por la comunidad.</p>
                 <a href="/vendedor" style="background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block; margin-top: 10px;">Registrar mi Puesto 🚀</a>
                 <a href="/admin" style="display: block; margin-top: 15px; color: #888; font-size: 14px; text-decoration: none;">Panel de Administración</a>
             </div>
@@ -87,6 +108,20 @@ def index():
     </body>
     </html>
     """
+
+@app.route('/votar/<int:id>', methods=['POST'])
+def votar(id):
+    try:
+        estrellas = int(request.form.get('estrellas', 5))
+        if 1 <= estrellas <= 5:
+            puesto = Puesto.query.get(id)
+            if puesto:
+                puesto.puntuacion_total = (puesto.puntuacion_total or 0) + estrellas
+                puesto.total_votos = (puesto.total_votos or 0) + 1
+                db.session.commit()
+    except Exception:
+        db.session.rollback()
+    return redirect(url_for('index'))
 
 @app.route('/vendedor', methods=['GET', 'POST'])
 def vendedor():
@@ -135,12 +170,14 @@ def admin():
         html_puestos = ""
         for p in puestos:
             estado_color = 'green' if p.estado and p.estado.strip().lower() == 'aprobado' else 'orange'
+            promedio = round(p.puntuacion_total / p.total_votos, 1) if p.total_votos > 0 else 0.0
             html_puestos += f"""
             <tr>
                 <td style="padding: 10px; border: 1px solid #ddd;">{p.id}</td>
                 <td style="padding: 10px; border: 1px solid #ddd;">{p.nombre}</td>
                 <td style="padding: 10px; border: 1px solid #ddd;">{p.whatsapp}</td>
                 <td style="padding: 10px; border: 1px solid #ddd;">{p.menu}</td>
+                <td style="padding: 10px; border: 1px solid #ddd;">⭐ {promedio} ({p.total_votos} votos)</td>
                 <td style="padding: 10px; border: 1px solid #ddd; font-weight: bold; color: {estado_color};">{p.estado}</td>
                 <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">
                     <a href="/admin/aprobar/{p.id}" style="background: #28a745; color: white; padding: 5px 10px; text-decoration: none; border-radius: 4px; margin-right: 5px;">Aprobar</a>
@@ -168,13 +205,14 @@ def admin():
                             <th style="padding: 10px; border: 1px solid #ddd;">ID</th>
                             <th style="padding: 10px; border: 1px solid #ddd;">Nombre</th>
                             <th style="padding: 10px; border: 1px solid #ddd;">WhatsApp</th>
-                            <th style="padding: 10px; border: 1px solid #ddd;">Menú / Detalles</th>
+                            <th style="padding: 10px; border: 1px solid #ddd;">Menú</th>
+                            <th style="padding: 10px; border: 1px solid #ddd;">Calificación</th>
                             <th style="padding: 10px; border: 1px solid #ddd;">Estado</th>
                             <th style="padding: 10px; border: 1px solid #ddd;">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {html_puestos if html_puestos else '<tr><td colspan="6" style="text-align: center; padding: 20px; color: #777;">No hay puestos registrados todavía.</td></tr>'}
+                        {html_puestos if html_puestos else '<tr><td colspan="7" style="text-align: center; padding: 20px; color: #777;">No hay puestos registrados todavía.</td></tr>'}
                     </tbody>
                 </table>
             </div>
