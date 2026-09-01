@@ -29,11 +29,9 @@ class Puesto(db.Model):
 with app.app_context():
     db.create_all()
 
-# Ruta Principal corregida para que cargue directo en la raíz (/)
+# Ruta Principal
 @app.route('/')
-anko = None # (Mantiene la compatibilidad con tu lógica previa)
 def index():
-    # Muestra los puestos aprobados en la página principal
     puestos_activos = Puesto.query.filter_by(estado='Aprobado').all()
     return render_template('index.html', puestos=puestos_activos)
 
