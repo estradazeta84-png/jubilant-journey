@@ -29,7 +29,10 @@ class Puesto(db.Model):
     total_votos = db.Column(db.Integer, default=0)
 
 with app.app_context():
-    db.create_all()
+    try:
+        db.create_all()
+    except Exception:
+        pass
 
 @app.route('/')
 def index():
@@ -43,17 +46,22 @@ def index():
 def vendedor():
     if request.method == 'POST':
         try:
-            # 1. Se guarda en Supabase al instante de hacer clic
+            # Captura flexible para asegurar que agarre cualquier nombre de input
+            val_nombre = request.form.get('nombre') or request.form.get('negocio') or request.form.get('titulo') or 'Sin Nombre'
+            val_whatsapp = request.form.get('whatsapp') or request.form.get('telefono') or request.form.get('celular') or 'Sin Teléfono'
+            val_menu = request.form.get('menu') or request.form.get('descripcion') or request.form.get('detalles') or 'Sin Menú'
+
+            # 1. Se registra en la base de datos AL INSTANTE de hacer clic
             nuevo_puesto = Puesto(
-                nombre=request.form['nombre'],
-                whatsapp=request.form['whatsapp'],
-                menu=request.form['menu'],
+                nombre=val_nombre,
+                whatsapp=val_whatsapp,
+                menu=val_menu,
                 estado='Pendiente'
             )
             db.session.add(nuevo_puesto)
             db.session.commit()
             
-            # 2. Redirige directo al link de suscripción de Mercado Pago
+            # 2. Redirige de inmediato al enlace de pago de Mercado Pago
             return redirect(LINK_MERCADO_PAGO)
         except Exception as e:
             db.session.rollback()
@@ -63,20 +71,20 @@ def vendedor():
 
 @app.route('/admin', methods=['GET', 'POST'])
 def admin():
-    if session.get('admin_logged_in'):
-        try:
-            puestos = Puesto.query.all()
-        except Exception:
-            puestos = []
-        return render_template('admin.html', puestos=puestos)
-    
     if request.method == 'POST':
         if request.form.get('password') == 'admin123':
             session['admin_logged_in'] = True
             return redirect(url_for('admin'))
         else:
             return render_template('Admin_login.html', error="Contraseña incorrecta")
-            
+
+    if session.get('admin_logged_in'):
+        try:
+            puestos = Puesto.query.all()
+        except Exception as e:
+            puestos = []
+        return render_template('admin.html', puestos=puestos)
+    
     return render_template('Admin_login.html')
 
 @app.route('/admin_login', methods=['GET', 'POST'])
@@ -86,17 +94,23 @@ def admin_login():
 @app.route('/admin/aprobar/<int:id>')
 def aprobar_puesto(id):
     if session.get('admin_logged_in'):
-        puesto = Puesto.query.get_or_404(id)
-        puesto.estado = 'Aprobado'
-        db.session.commit()
+        try:
+            puesto = Puesto.query.get_or_404(id)
+            puesto.estado = 'Aprobado'
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
     return redirect(url_for('admin'))
 
 @app.route('/admin/eliminar/<int:id>')
 def eliminar_puesto(id):
     if session.get('admin_logged_in'):
-        puesto = Puesto.query.get_or_404(id)
-        db.session.delete(puesto)
-        db.session.commit()
+        try:
+            puesto = Puesto.query.get_or_404(id)
+            db.session.delete(puesto)
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
     return redirect(url_for('admin'))
 
 if __name__ == '__main__':
